@@ -1,5 +1,7 @@
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use std::time::{SystemTime, UNIX_EPOCH};
 use thiserror::Error;
 
 mod http_client;
@@ -121,6 +123,61 @@ struct CreateSessionResponse {
     session_id: String,
 }
 
+#[derive(Debug)]
+pub enum TokenRole {
+    Publisher,
+    Subscriber,
+    Moderator,
+}
+
+impl fmt::Display for TokenRole {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(formatter, "{}", format!("{:?}", self).to_lowercase())
+    }
+}
+
+#[derive(Debug)]
+struct TokenData<'a> {
+    session_id: &'a str,
+    create_time: u64,
+    expire_time: u64,
+    nonce: u64,
+    role: TokenRole,
+    initial_layout_class_list: &'static str,
+}
+
+impl<'a> TokenData<'a> {
+    pub fn new(session_id: &'a str, role: TokenRole) -> Self {
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards, Doc!")
+            .as_secs();
+        let mut rng = rand::thread_rng();
+        Self {
+            session_id,
+            create_time: now,
+            expire_time: now + (60 * 60 * 24),
+            nonce: rng.gen::<u64>(),
+            role,
+            initial_layout_class_list: "",
+        }
+    }
+}
+
+impl<'a> fmt::Display for TokenData<'a> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            formatter,
+            "{}",
+            format!(
+                "session_id={:?}&create_time={:?}&expire_time={:?}&nonce={:?}&role={:?}&initial_layout_class_list={:?}",
+                self.session_id, self.create_time, self.expire_time, self.nonce, self.role, self.initial_layout_class_list,
+            )
+            .to_lowercase()
+        )
+    }
+}
+
 /// Top level entry point exposing the OpenTok server SDK functionality.
 /// Contains methods for creating OpenTok sessions, generating tokens and
 /// getting information about streams.
@@ -159,6 +216,20 @@ impl OpenTok {
             None => Err(OpenTokError::UnexpectedResponse(response_str)),
         }
     }
+
+    pub fn generate_token(&self, session_id: &str, role: TokenRole) -> String {
+        let token_data = TokenData::new(session_id, role);
+        let signed = hmacsha1::hmac_sha1(
+            self.api_secret.as_bytes(),
+            token_data.to_string().as_bytes(),
+        );
+        let decoded = format!(
+            "partner_id={:?}&sig={:?}:{:?}",
+            self.api_key, signed, token_data
+        );
+        let encoded = base64::encode(decoded);
+        format!("T1=={}", encoded)
+    }
 }
 
 #[cfg(test)]
@@ -187,5 +258,20 @@ mod tests {
             .run_until(opentok.create_session(SessionOptions::default()))
             .unwrap();
         assert!(!session_id.is_empty());
+    }
+
+    #[test]
+    fn test_generate_token() {
+        let api_key = env::var("OPENTOK_KEY").unwrap();
+        let api_secret = env::var("OPENTOK_SECRET").unwrap();
+        let opentok = OpenTok::new(api_key, api_secret);
+        let mut pool = LocalPool::new();
+        let session_id = pool
+            .run_until(opentok.create_session(SessionOptions::default()))
+            .unwrap();
+        assert!(!session_id.is_empty());
+        let token = opentok.generate_token(&session_id, TokenRole::Publisher);
+        println!("TOKEN {:?}", token);
+        assert!(!token.is_empty());
     }
 }
