@@ -1,4 +1,7 @@
+extern crate rustc_serialize;
+
 use rand::Rng;
+use rustc_serialize::hex::ToHex;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -143,7 +146,6 @@ struct TokenData<'a> {
     expire_time: u64,
     nonce: u64,
     role: TokenRole,
-    initial_layout_class_list: &'static str,
 }
 
 impl<'a> TokenData<'a> {
@@ -159,7 +161,6 @@ impl<'a> TokenData<'a> {
             expire_time: now + (60 * 60 * 24),
             nonce: rng.gen::<u64>(),
             role,
-            initial_layout_class_list: "",
         }
     }
 }
@@ -170,10 +171,9 @@ impl<'a> fmt::Display for TokenData<'a> {
             formatter,
             "{}",
             format!(
-                "session_id={:?}&create_time={:?}&expire_time={:?}&nonce={:?}&role={:?}&initial_layout_class_list={:?}",
-                self.session_id, self.create_time, self.expire_time, self.nonce, self.role, self.initial_layout_class_list,
+                "session_id={}&create_time={}&expire_time={}&nonce={}&role={}",
+                self.session_id, self.create_time, self.expire_time, self.nonce, self.role,
             )
-            .to_lowercase()
         )
     }
 }
@@ -222,10 +222,13 @@ impl OpenTok {
         let signed = hmacsha1::hmac_sha1(
             self.api_secret.as_bytes(),
             token_data.to_string().as_bytes(),
-        );
+        )
+        .to_hex();
         let decoded = format!(
-            "partner_id={:?}&sig={:?}:{:?}",
-            self.api_key, signed, token_data
+            "partner_id={}&sig={}:{}",
+            self.api_key,
+            signed,
+            token_data.to_string()
         );
         let encoded = base64::encode(decoded);
         format!("T1=={}", encoded)
@@ -271,7 +274,6 @@ mod tests {
             .unwrap();
         assert!(!session_id.is_empty());
         let token = opentok.generate_token(&session_id, TokenRole::Publisher);
-        println!("TOKEN {:?}", token);
         assert!(!token.is_empty());
     }
 }
