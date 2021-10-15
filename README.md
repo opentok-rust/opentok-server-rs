@@ -13,6 +13,7 @@ Use it in conjunction with the [OpenTok client SDK](https://github.com/ferjm/ope
     let api_secret = env::var("OPENTOK_SECRET").unwrap();
     let opentok = OpenTok::new(api_key, api_secret);
     let session_id = opentok.create_session(SessionOptions::default()).await;
+    let token = opentok.generate_token(session_id, TokenRole::Publisher);
 ```
 
 ## Running the tests
