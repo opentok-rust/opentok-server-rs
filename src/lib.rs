@@ -9,6 +9,9 @@ use thiserror::Error;
 
 mod http_client;
 
+static SERVER_URL: &str = "https://api.opentok.com";
+static API_ENDPOINT_PATH_START: &str = "/v2/project/";
+
 /// Unique session identifier.
 pub type SessionId = String;
 
@@ -178,6 +181,29 @@ impl<'a> fmt::Display for TokenData<'a> {
     }
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum VideoType {
+    Camera,
+    Screen,
+    Custom,
+}
+
+impl fmt::Display for VideoType {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(formatter, "{}", format!("{:?}", self).to_lowercase())
+    }
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StreamInfo {
+    id: String,
+    video_type: VideoType,
+    name: String,
+    layout_class_list: Vec<String>,
+}
+
 /// Top level entry point exposing the OpenTok server SDK functionality.
 /// Contains methods for creating OpenTok sessions, generating tokens and
 /// getting information about streams.
@@ -204,8 +230,9 @@ impl OpenTok {
         options: SessionOptions<'a>,
     ) -> Result<String, OpenTokError> {
         let body: CreateSessionBody = options.into();
+        let endpoint = format!("{}{}", SERVER_URL, "/session/create");
         let mut response =
-            http_client::post("/session/create", &self.api_key, &self.api_secret, &body).await?;
+            http_client::post(&endpoint, &self.api_key, &self.api_secret, &body).await?;
         let response_str = response.body_string().await?;
         let mut response: Vec<CreateSessionResponse> =
             serde_json::from_str::<Vec<CreateSessionResponse>>(&response_str)
@@ -233,6 +260,21 @@ impl OpenTok {
         let encoded = base64::encode(decoded);
         format!("T1=={}", encoded)
     }
+
+    pub async fn get_stream_info(
+        &self,
+        session_id: &str,
+        stream_id: &str,
+    ) -> Result<StreamInfo, OpenTokError> {
+        let endpoint = format!(
+            "{}{}{}/session/{}/stream/{}",
+            SERVER_URL, API_ENDPOINT_PATH_START, self.api_key, session_id, stream_id
+        );
+        let mut response = http_client::get(&endpoint, &self.api_key, &self.api_secret).await?;
+        let response_str = response.body_string().await?;
+        serde_json::from_str::<StreamInfo>(&response_str)
+            .map_err(|_| OpenTokError::UnexpectedResponse(response_str.clone()))
+    }
 }
 
 #[cfg(test)]
@@ -240,6 +282,8 @@ mod tests {
     use super::*;
 
     use futures::executor::LocalPool;
+    use opentok_utils::common::Credentials;
+    use opentok_utils::publisher::Publisher;
     use std::env;
 
     #[test]
@@ -275,5 +319,41 @@ mod tests {
         assert!(!session_id.is_empty());
         let token = opentok.generate_token(&session_id, TokenRole::Publisher);
         assert!(!token.is_empty());
+    }
+
+    #[test]
+    fn test_get_stream_info() {
+        let api_key = env::var("OPENTOK_KEY").unwrap();
+        let api_secret = env::var("OPENTOK_SECRET").unwrap();
+        let opentok = OpenTok::new(api_key.clone(), api_secret);
+        let mut pool = LocalPool::new();
+        let session_id = pool
+            .run_until(opentok.create_session(SessionOptions::default()))
+            .unwrap();
+        assert!(!session_id.is_empty());
+        let token = opentok.generate_token(&session_id, TokenRole::Publisher);
+        assert!(!token.is_empty());
+
+        opentok::init().unwrap();
+
+        let publisher = Publisher::new(
+            Credentials {
+                api_key,
+                session_id: session_id.clone(),
+                token,
+            },
+            Some(Box::new(move |publisher, stream_id| {
+                let mut pool = LocalPool::new();
+                let stream_info = pool
+                    .run_until(opentok.get_stream_info(&session_id, &stream_id))
+                    .unwrap();
+                assert_eq!(stream_info.id, stream_id);
+                publisher.stop();
+            })),
+        );
+
+        publisher.run().unwrap();
+
+        opentok::deinit().unwrap();
     }
 }

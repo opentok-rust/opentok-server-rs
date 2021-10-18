@@ -17,3 +17,7 @@ serde = "1.0.130"
 serde_json = "1.0.68"
 surf = "2.3.1"
 thiserror = "1.0.25"
+
+[dev-dependencies]
+opentok = { git = "https://github.com/ferjm/opentok-rs.git", branch = "main" }
+opentok-utils = { git = "https://github.com/ferjm/opentok-rs.git", branch = "main" }
