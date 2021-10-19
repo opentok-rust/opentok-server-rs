@@ -79,18 +79,18 @@ pub struct SessionOptions<'a> {
     /// An IP address that the OpenTok servers will use to situate the session in the global
     /// OpenTok network. If you do not set a location hint, the OpenTok servers will be based
     /// on the first client connecting to the session.
-    location: Option<&'a str>,
+    pub location: Option<&'a str>,
     /// Determines whether the session will transmit streams using the OpenTok Media Router
     /// ("routed") or not ("relayed"). By default, the setting is "relayed".
     /// With the media_mode parameter set to "relayed", the session will attempt to transmit
     /// streams directly between clients. If clients cannot connect due to firewall restrictions,
     /// the session uses the OpenTok TURN server to relay audio-video streams.
-    media_mode: Option<MediaMode>,
+    pub media_mode: Option<MediaMode>,
     /// Whether the session is automatically archived ("always") or not ("manual").
     /// By default, the setting is "manual". To archive the session (either automatically or not),
     /// you must set the media_mode parameter to "routed".
     /// Archiving is currently unsupported.
-    archive_mode: Option<ArchiveMode>,
+    pub archive_mode: Option<ArchiveMode>,
 }
 
 #[derive(Serialize)]
