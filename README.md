@@ -24,3 +24,19 @@ The tests expect a working network connection and the following environment vari
 export OPENTOK_KEY=<your-opentok-api-key>
 export OPENTOK_SECRET=<your-opentok-api-secret>
 ```
+
+The tests make use of the [OpenTok client SDK](https://github.com/ferjm/opentok-rs), so you'll
+need to install its dependencies, starting with the OpenTok Linux SDK:
+
+```sh
+wget https://tokbox.com/downloads/libopentok_linux_llvm_x86_64-2.19.1
+tar xvf libopentok_linux_llvm_x86_64-2.19.1 -C /home/quijote/opentok
+export LD_LIBRARY_PATH="/home/quijote/opentok/libopentok_linux_llvm_x86_64-2.19.1/lib:$LD_LIBRARY_PATH"
+export LIBRARY_PATH="/home/quijote/opentok/libopentok_linux_llvm_x86_64-2.19.1/lib:$LIBRARY_PATH"
+```
+
+[GStreamer](https://gitlab.freedesktop.org/gstreamer/gstreamer-rs) is also required:
+
+```sh
+sudo apt -y install libgstreamer-plugins-base1.0-dev
+```
