@@ -17,7 +17,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Dependencies
-      run: sudo apt -y install libgstreamer-plugins-base1.0-dev
+    - name: Install SDK
+      run: |
+        wget https://tokbox.com/downloads/libopentok_linux_llvm_x86_64-2.19.1
+        tar xf libopentok_linux_llvm_x86_64-2.19.1
+        rm -f libopentok_linux_llvm_x86_64-2.19.1
+        sudo apt update
+        sudo apt -y install clang libc++-dev libc++abi-dev libgstreamer-plugins-base1.0-dev
     - name: Build
       run: cargo build --verbose
     - name: Run tests
