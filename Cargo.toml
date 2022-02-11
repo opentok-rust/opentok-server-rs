@@ -19,5 +19,4 @@ surf = "2.3.1"
 thiserror = "1.0.25"
 
 [dev-dependencies]
-opentok = { git = "https://github.com/opentok-rust/opentok-rs.git", branch = "main" }
-opentok-utils = { git = "https://github.com/opentok-rust/opentok-rs.git", branch = "main" }
+opentok = { git = "https://github.com/opentok-rust/opentok-rs.git", branch = "main", features = ["gstreamer-utils"] }

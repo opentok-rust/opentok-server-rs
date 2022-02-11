@@ -282,8 +282,8 @@ mod tests {
     use super::*;
 
     use futures::executor::LocalPool;
-    use opentok_utils::common::Credentials;
-    use opentok_utils::publisher::Publisher;
+    use opentok::utils::common::Credentials;
+    use opentok::utils::publisher::Publisher;
     use std::env;
 
     #[test]
@@ -350,6 +350,7 @@ mod tests {
                 assert_eq!(stream_info.id, stream_id);
                 publisher.stop();
             })),
+            None,
         );
 
         publisher.run().unwrap();
