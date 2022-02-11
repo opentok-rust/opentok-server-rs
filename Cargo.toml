@@ -1,10 +1,15 @@
 [package]
 name = "opentok-server"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 description = "The OpenTok Server Rust SDK"
 authors = ["Fernando Jiménez Moreno <ferjmoreno@gmail.com>", "Philippe Normand <philn@igalia.com>"]
 repository = "https://github.com/opentok-rust/opentok-server-rs"
+license = "MIT"
+documentation = "https://opentok-rust.github.io/opentok-server-rs/opentok_server"
+keywords = ["opentok", "tokbox", "vonage", "webrtc", "multimedia"]
+categories = ["multimedia"]
+readme = "README.md"
 
 [dependencies]
 base64 = "0.13.0"
