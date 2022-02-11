@@ -352,12 +352,6 @@
 <span id="351">351</span>
 <span id="352">352</span>
 <span id="353">353</span>
-<span id="354">354</span>
-<span id="355">355</span>
-<span id="356">356</span>
-<span id="357">357</span>
-<span id="358">358</span>
-<span id="359">359</span>
 </pre><pre class="rust"><code><span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">rustc_serialize</span>;
 
 <span class="kw">use</span> <span class="ident">rand::Rng</span>;
@@ -468,7 +462,7 @@
             <span class="ident">archive_mode</span>: <span class="ident">options</span>
                 .<span class="ident">archive_mode</span>
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">mode</span><span class="op">|</span> <span class="ident">mode</span>.<span class="ident">to_string</span>())
-                .<span class="ident">unwrap_or</span>(<span class="string">&quot;manual&quot;</span>.<span class="ident">into</span>()),
+                .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;manual&quot;</span>.<span class="ident">into</span>()),
             <span class="ident">location</span>: <span class="ident">options</span>.<span class="ident">location</span>,
             <span class="ident">p2p_preference</span>: <span class="ident">options</span>
                 .<span class="ident">media_mode</span>
@@ -532,11 +526,8 @@
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="macro">write!</span>(
             <span class="ident">formatter</span>,
-            <span class="string">&quot;{}&quot;</span>,
-            <span class="macro">format!</span>(
-                <span class="string">&quot;session_id={}&amp;create_time={}&amp;expire_time={}&amp;nonce={}&amp;role={}&quot;</span>,
-                <span class="self">self</span>.<span class="ident">session_id</span>, <span class="self">self</span>.<span class="ident">create_time</span>, <span class="self">self</span>.<span class="ident">expire_time</span>, <span class="self">self</span>.<span class="ident">nonce</span>, <span class="self">self</span>.<span class="ident">role</span>,
-            )
+            <span class="string">&quot;session_id={}&amp;create_time={}&amp;expire_time={}&amp;nonce={}&amp;role={}&quot;</span>,
+            <span class="self">self</span>.<span class="ident">session_id</span>, <span class="self">self</span>.<span class="ident">create_time</span>, <span class="self">self</span>.<span class="ident">expire_time</span>, <span class="self">self</span>.<span class="ident">nonce</span>, <span class="self">self</span>.<span class="ident">role</span>,
         )
     }
 }
@@ -557,6 +548,7 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StreamInfo</span> {
     <span class="ident">id</span>: <span class="ident">String</span>,
     <span class="ident">video_type</span>: <span class="ident">VideoType</span>,
@@ -611,12 +603,7 @@
             <span class="ident">token_data</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>(),
         )
         .<span class="ident">to_hex</span>();
-        <span class="kw">let</span> <span class="ident">decoded</span> <span class="op">=</span> <span class="macro">format!</span>(
-            <span class="string">&quot;partner_id={}&amp;sig={}:{}&quot;</span>,
-            <span class="self">self</span>.<span class="ident">api_key</span>,
-            <span class="ident">signed</span>,
-            <span class="ident">token_data</span>.<span class="ident">to_string</span>()
-        );
+        <span class="kw">let</span> <span class="ident">decoded</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;partner_id={}&amp;sig={}:{}&quot;</span>, <span class="self">self</span>.<span class="ident">api_key</span>, <span class="ident">signed</span>, <span class="ident">token_data</span>);
         <span class="kw">let</span> <span class="ident">encoded</span> <span class="op">=</span> <span class="ident">base64::encode</span>(<span class="ident">decoded</span>);
         <span class="macro">format!</span>(<span class="string">&quot;T1=={}&quot;</span>, <span class="ident">encoded</span>)
     }
@@ -642,8 +629,8 @@
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
     <span class="kw">use</span> <span class="ident">futures::executor::LocalPool</span>;
-    <span class="kw">use</span> <span class="ident">opentok_utils::common::Credentials</span>;
-    <span class="kw">use</span> <span class="ident">opentok_utils::publisher::Publisher</span>;
+    <span class="kw">use</span> <span class="ident">opentok::utils::common::Credentials</span>;
+    <span class="kw">use</span> <span class="ident">opentok::utils::publisher::Publisher</span>;
     <span class="kw">use</span> <span class="ident">std::env</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -710,6 +697,7 @@
                 <span class="macro">assert_eq!</span>(<span class="ident">stream_info</span>.<span class="ident">id</span>, <span class="ident">stream_id</span>);
                 <span class="ident">publisher</span>.<span class="ident">stop</span>();
             })),
+            <span class="prelude-val">None</span>,
         );
 
         <span class="ident">publisher</span>.<span class="ident">run</span>().<span class="ident">unwrap</span>();
