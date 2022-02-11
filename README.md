@@ -1,10 +1,10 @@
 # OpenTok Server Rust SDK
 
-[![Rust](https://github.com/ferjm/opentok-server-rs/actions/workflows/rust.yml/badge.svg)](https://github.com/ferjm/opentok-server-rs/actions/workflows/rust.yml)
+[![Rust](https://github.com/opentok-rust/opentok-server-rs/actions/workflows/rust.yml/badge.svg)](https://github.com/opentok-rust/opentok-server-rs/actions/workflows/rust.yml)
 
 The OpenTok Server Rust SDK wraps the OpenTok REST API. It lets developers securely create sessions and generate tokens
 for their applications that use the Vonage Video API. Developers can also use the server SDK to work with OpenTok archives.
-Use it in conjunction with the [OpenTok client SDK](https://github.com/ferjm/opentok-rs).
+Use it in conjunction with the [OpenTok client SDK](https://github.com/opentok-rust/opentok-rs).
 
 ## Usage
 
@@ -25,7 +25,7 @@ export OPENTOK_KEY=<your-opentok-api-key>
 export OPENTOK_SECRET=<your-opentok-api-secret>
 ```
 
-The tests make use of the [OpenTok client SDK](https://github.com/ferjm/opentok-rs), so you'll
+The tests make use of the [OpenTok client SDK](https://github.com/opentok-rust/opentok-rs), so you'll
 need to install its dependencies, starting with the OpenTok Linux SDK:
 
 ```sh
