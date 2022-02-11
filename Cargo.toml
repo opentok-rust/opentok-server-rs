@@ -1,6 +1,6 @@
 [package]
 name = "opentok-server"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "The OpenTok Server Rust SDK"
 authors = ["Fernando Jiménez Moreno <ferjmoreno@gmail.com>", "Philippe Normand <philn@igalia.com>"]
