@@ -108,7 +108,7 @@ impl<'a> From<SessionOptions<'a>> for CreateSessionBody<'a> {
             archive_mode: options
                 .archive_mode
                 .map(|mode| mode.to_string())
-                .unwrap_or("manual".into()),
+                .unwrap_or_else(|| "manual".into()),
             location: options.location,
             p2p_preference: options
                 .media_mode
@@ -172,11 +172,8 @@ impl<'a> fmt::Display for TokenData<'a> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         write!(
             formatter,
-            "{}",
-            format!(
-                "session_id={}&create_time={}&expire_time={}&nonce={}&role={}",
-                self.session_id, self.create_time, self.expire_time, self.nonce, self.role,
-            )
+            "session_id={}&create_time={}&expire_time={}&nonce={}&role={}",
+            self.session_id, self.create_time, self.expire_time, self.nonce, self.role,
         )
     }
 }
@@ -197,6 +194,7 @@ impl fmt::Display for VideoType {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct StreamInfo {
     id: String,
     video_type: VideoType,
@@ -251,12 +249,7 @@ impl OpenTok {
             token_data.to_string().as_bytes(),
         )
         .to_hex();
-        let decoded = format!(
-            "partner_id={}&sig={}:{}",
-            self.api_key,
-            signed,
-            token_data.to_string()
-        );
+        let decoded = format!("partner_id={}&sig={}:{}", self.api_key, signed, token_data);
         let encoded = base64::encode(decoded);
         format!("T1=={}", encoded)
     }
